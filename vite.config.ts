@@ -5,6 +5,28 @@
 //     React/TanStack dedupe, error logger plugins, and sandbox detection (port/host/strictPort).
 // You can pass additional config via defineConfig({ vite: { ... }, etc... }) if needed.
 import { defineConfig } from "@lovable.dev/vite-tanstack-config";
+import fs from "fs";
+import path from "path";
+
+// Auto-copy datasets to public/Datasets on startup/reload
+try {
+  const srcDir = path.resolve("Datasets");
+  const destDir = path.resolve("public/Datasets");
+  if (fs.existsSync(srcDir)) {
+    if (!fs.existsSync(destDir)) {
+      fs.mkdirSync(destDir, { recursive: true });
+    }
+    const files = fs.readdirSync(srcDir);
+    for (const file of files) {
+      const srcFile = path.join(srcDir, file);
+      const destFile = path.join(destDir, file);
+      fs.copyFileSync(srcFile, destFile);
+    }
+    console.log("Successfully synchronized datasets to public/Datasets/");
+  }
+} catch (e) {
+  console.error("Failed to copy datasets:", e);
+}
 
 export default defineConfig({
   tanstackStart: {
@@ -13,3 +35,4 @@ export default defineConfig({
     server: { entry: "server" },
   },
 });
+

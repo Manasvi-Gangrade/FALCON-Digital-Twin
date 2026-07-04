@@ -45,9 +45,9 @@ export function PriorityBoard({
               onClick={() => setSort(k)}
               className={cn(
                 "mono rounded border px-2 py-1 text-[10px] uppercase tracking-widest transition",
-                sort === k
-                  ? "border-hud-cyan text-hud-cyan"
-                  : "border-hud-border text-hud-muted hover:text-hud-text",
+                  sort === k
+                    ? "border-hud-cyan text-hud-cyan"
+                    : "border-hud-border text-hud-muted hover:text-white hover:border-slate-400",
               )}
               style={sort === k ? { boxShadow: "0 2px 8px rgba(14, 165, 233, 0.15)" } : undefined}
             >

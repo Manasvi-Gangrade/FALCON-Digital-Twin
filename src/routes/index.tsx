@@ -5,13 +5,13 @@ export const Route = createFileRoute("/")({
   component: FalconApp,
   head: () => ({
     meta: [
-      { title: "FALCON · Aerospace Digital Twin" },
+      { title: "FALCON · Four-Stage Aeroengine Latent Component & Operational Network" },
       {
         name: "description",
         content:
-          "FALCON — Physics-informed digital twin for real-time four-stage turbojet health monitoring. Built for Aerothon 2026.",
+          "FALCON — Four-Stage Aeroengine Latent Component & Operational Network: Physics-informed digital twin for real-time four-stage turbojet health monitoring. Built for Aerothon 2026.",
       },
-      { property: "og:title", content: "FALCON · Aerospace Digital Twin" },
+      { property: "og:title", content: "FALCON · Four-Stage Aeroengine Latent Component & Operational Network" },
       {
         property: "og:description",
         content:

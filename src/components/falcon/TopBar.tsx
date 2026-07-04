@@ -19,7 +19,7 @@ export function TopBar({
   const selected = engines.find((e) => e.id === selectedId) ?? engines[0];
 
   return (
-    <header className="sticky top-0 z-20 flex h-14 items-center justify-between border-b border-hud-border bg-[#0b1220]/85 px-6 backdrop-blur-md">
+    <header className="sticky top-0 z-20 flex h-14 items-center justify-between border-b border-hud-border bg-[#121b2d]/85 px-6 backdrop-blur-md">
       <div className="flex items-center gap-4">
         <div className="mono text-[10px] uppercase tracking-[0.3em] text-slate-400">
           Mission Control · Sector IV

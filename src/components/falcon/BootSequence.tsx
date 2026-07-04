@@ -56,8 +56,8 @@ export function BootSequence({ onDone }: { onDone: () => void }) {
           <div className="mono text-4xl font-bold tracking-[0.35em] text-hud-text">
             FALCON
           </div>
-          <div className="eyebrow mt-1 tracking-[0.35em]">
-            AEROSPACE LIFECYCLE OBSERVATION
+          <div className="eyebrow mt-1 tracking-[0.14em]">
+            FOUR-STAGE AEROENGINE LATENT COMPONENT & OPERATIONAL NETWORK
           </div>
         </div>
       </div>

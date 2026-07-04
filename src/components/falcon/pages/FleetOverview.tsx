@@ -79,7 +79,7 @@ function Hero({ fleetSev, engineCount, needAttn }: { fleetSev: any; engineCount:
       <div className="relative z-10 max-w-2xl">
         <div className="flex items-center gap-2">
           <StatusDot severity={fleetSev} />
-          <span className="eyebrow">Fleet Status · Nominal Operations</span>
+          <span className="eyebrow">FALCON · Four-Stage Aeroengine Latent Component & Operational Network</span>
         </div>
         <h1 className="mono mt-3 text-4xl font-bold tracking-tight text-hud-text">
           FALCON <span className="text-hud-cyan">Digital Twin</span>

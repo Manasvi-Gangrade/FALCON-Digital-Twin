@@ -77,16 +77,16 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "FALCON · Aerospace Digital Twin" },
-      { name: "description", content: "Physics-informed digital twin for real-time turbojet health monitoring." },
-      { property: "og:title", content: "FALCON · Aerospace Digital Twin" },
+      { title: "FALCON · Four-Stage Aeroengine Latent Component & Operational Network" },
+      { name: "description", content: "Physics-informed digital twin for real-time four-stage turbojet health monitoring." },
+      { property: "og:title", content: "FALCON · Four-Stage Aeroengine Latent Component & Operational Network" },
       { property: "og:description", content: "Real-time turbojet health monitoring for the HAL fleet." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
     ],
     links: [
       { rel: "stylesheet", href: appCss },
-      { rel: "icon", href: "/favicon.ico", type: "image/x-icon" },
+      { rel: "icon", href: "/favicon.svg", type: "image/svg+xml" },
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "" },
       {

@@ -62,7 +62,7 @@ export function FalconApp() {
       {/* Sidebar */}
       <aside
         className={cn(
-          "fixed left-0 top-0 z-30 h-screen border-r border-hud-border bg-[#0b1220]/95 backdrop-blur-md transition-[width] duration-300 ease-out",
+          "fixed left-0 top-0 z-30 h-screen border-r border-hud-border bg-[#121b2d]/95 backdrop-blur-md transition-[width] duration-300 ease-out",
           sidebarOpen ? "w-56" : "w-16",
         )}
       >
@@ -121,7 +121,7 @@ export function FalconApp() {
 
         <button
           onClick={() => setSidebarOpen((s) => !s)}
-          className="absolute bottom-4 left-1/2 -translate-x-1/2 rounded-full border border-hud-border bg-[#0b1220] p-1.5 text-slate-400 hover:text-hud-cyan shadow-sm hover:border-hud-cyan/50"
+          className="absolute bottom-4 left-1/2 -translate-x-1/2 rounded-full border border-hud-border bg-[#121b2d] p-1.5 text-slate-400 hover:text-hud-cyan shadow-sm hover:border-hud-cyan/50"
           aria-label="Toggle sidebar"
         >
           {sidebarOpen ? <ChevronLeft className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}

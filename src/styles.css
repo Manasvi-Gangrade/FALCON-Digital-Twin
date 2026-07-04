@@ -50,11 +50,11 @@
   --radius: 0.75rem;
 
   /* FALCON Light Theme palette - Slightly Darker & More Colorful */
-  --hud-bg: #090d16;      /* Deep Navy Blue */
-  --hud-canvas: #090d16;
-  --hud-panel: #ffffff;
-  --hud-panel-2: #f1f5f9;  /* Light slate-100 subpanels */
-  --hud-border: rgba(255, 255, 255, 0.1);
+  --hud-bg: #1e2d4a;      /* Deep Navy Blue */
+  --hud-canvas: #1e2d4a;
+  --hud-panel: #f0f4f8;
+  --hud-panel-2: #e1e9f2;  /* Cool subpanels */
+  --hud-border: rgba(255, 255, 255, 0.15);
   --hud-cyan: #0ea5e9;
   --hud-teal: #14b8a6;
   --hud-violet: #a855f7;
