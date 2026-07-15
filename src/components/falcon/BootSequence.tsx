@@ -26,7 +26,7 @@ export function BootSequence({ onDone }: { onDone: () => void }) {
   return (
     <div
       onClick={onDone}
-      className={`fixed inset-0 z-[100] flex cursor-pointer flex-col items-center justify-center bg-[color:var(--hud-bg)] transition-opacity duration-500 ${fading ? "opacity-0" : "opacity-100"}`}
+      className={`fixed inset-0 z-[100] flex cursor-pointer flex-col items-center justify-center bg-[#0a0f1d] transition-opacity duration-500 ${fading ? "opacity-0" : "opacity-100"}`}
       style={{ zIndex: 100 }}
     >
       {/* radial sweep */}
@@ -37,36 +37,36 @@ export function BootSequence({ onDone }: { onDone: () => void }) {
         <div
           className="absolute left-1/2 top-1/2 h-[140vmax] w-[140vmax] -translate-x-1/2 -translate-y-1/2 rounded-full"
           style={{
-            background: "conic-gradient(from 0deg, transparent 0deg, rgba(14, 165, 233, 0.08) 30deg, transparent 60deg)",
+            background: "conic-gradient(from 0deg, transparent 0deg, rgba(14, 165, 233, 0.12) 30deg, transparent 60deg)",
             animation: "spin 2.4s linear",
           }}
         />
         <div
           className="absolute left-0 right-0 h-24"
           style={{
-            background: "linear-gradient(to bottom, transparent, rgba(14, 165, 233, 0.1), transparent)",
+            background: "linear-gradient(to bottom, transparent, rgba(14, 165, 233, 0.15), transparent)",
             animation: "hud-scan 1.8s ease-in-out",
           }}
         />
       </div>
 
       <div className="anim-fade-up flex items-center gap-4">
-        <FalconLogo size={64} />
+        <FalconLogo size={64} className="text-hud-cyan filter drop-shadow-[0_0_8px_rgba(14,165,233,0.4)]" />
         <div>
-          <div className="mono text-4xl font-bold tracking-[0.35em] text-hud-text">
+          <div className="mono text-4xl font-bold tracking-[0.35em] text-white">
             FALCON
           </div>
-          <div className="eyebrow mt-1 tracking-[0.14em]">
+          <div className="mono text-[10px] mt-1.5 tracking-[0.14em] text-slate-400 uppercase">
             FOUR-STAGE AEROENGINE LATENT COMPONENT & OPERATIONAL NETWORK
           </div>
         </div>
       </div>
 
-      <div className="mono mt-10 flex w-[min(560px,90vw)] flex-col gap-1.5 text-xs text-hud-muted">
+      <div className="mono mt-10 flex w-[min(560px,90vw)] flex-col gap-1.5 text-xs">
         {LINES.slice(0, step).map((l, i) => (
           <div key={i} className="anim-fade-up flex items-center gap-2">
-            <span className="text-hud-green">▸</span>
-            <span className="text-hud-text/90">{l}</span>
+            <span className="text-hud-green font-bold">▸</span>
+            <span className="text-slate-200">{l}</span>
           </div>
         ))}
         {step < LINES.length && (
@@ -74,7 +74,7 @@ export function BootSequence({ onDone }: { onDone: () => void }) {
         )}
       </div>
 
-      <div className="absolute bottom-6 mono text-[10px] uppercase tracking-widest text-hud-muted">
+      <div className="absolute bottom-6 mono text-[10px] uppercase tracking-widest text-slate-400">
         click anywhere to skip
       </div>
     </div>
