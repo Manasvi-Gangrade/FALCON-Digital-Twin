@@ -16,44 +16,56 @@ Modern aerospace gas turbines operate under extreme thermal and mechanical stres
 The application is structured as a client-side digital twin dashboard, decoupling real-time diagnostic rendering from static data pipelines. 
 
 ```mermaid
-graph TD
-    subgraph User Interface
-        MainUI[FALCON Dashboards]
-        Overview[Fleet Overview Dashboard]
-        Diagnostics[Engine Diagnostics Panel]
-        Explorer[Dataset Log Explorer]
-        Priority[Maintenance Priority Queue]
-        Chatbot[System Diagnostic Assistant]
+flowchart LR
+    %% Style Definitions
+    classDef default fill:#121b2d,stroke:#38bdf8,stroke-width:1px,color:#f8fafc;
+    classDef file fill:#0b111e,stroke:#64748b,stroke-width:1.5px,color:#94a3b8;
+    classDef join fill:#0284c7,stroke:#0ea5e9,stroke-width:2px,color:#ffffff,font-weight:bold;
+    classDef ui fill:#1e2d4a,stroke:#14b8a6,stroke-width:1.5px,color:#f0fdfa;
+    classDef sim fill:#311b92,stroke:#a855f7,stroke-width:1px,color:#f3e8ff;
+
+    %% Data Sources
+    subgraph Sources [Data Pipeline Layer]
+        direction TB
+        CSV_Train[train.csv]:::file
+        CSV_Test[test.csv]:::file
+        CSV_GT[ground_truth.csv]:::file
+        CSV_Comp[turbojet_complete_dataset.csv]:::file
+    end
+
+    %% Processing
+    subgraph Engine [Processing Layer]
+        Parser[CSV Parser]
+        Joiner[In-Memory Join Engine]:::join
+        Active[Active Telemetry Stream]
+        PhysicsSim[Physics Degradation Engine]:::sim
         
-        MainUI --> Overview
-        MainUI --> Diagnostics
-        MainUI --> Explorer
-        MainUI --> Priority
-        MainUI --> Chatbot
+        Parser --> Joiner
+        Active --> Joiner
+        PhysicsSim -->|Inject Faults| Joiner
     end
 
-    subgraph Data Pipeline & Join Logic
-        CSV_Parser[Client-side CSV Parser]
-        Train_Set[(train.csv)]
-        Test_Set[(test.csv)]
-        GT_Labels[(ground_truth.csv)]
-        Complete_Set[(turbojet_complete_dataset.csv)]
-
-        CSV_Parser -->|Ingests| Train_Set
-        CSV_Parser -->|Ingests| Test_Set
-        CSV_Parser -->|Ingests| GT_Labels
-        CSV_Parser -->|Ingests| Complete_Set
-        
-        CSV_Parser -->|Engine ID & Cycle Join| ActiveData[Combined Telemetry & Health State]
+    %% Visualizers
+    subgraph UI [Visualization Layer]
+        direction TB
+        Overview[Fleet Overview Dashboard]:::ui
+        Diagnostics[Subsystem Diagnostics]:::ui
+        Explorer[Dataset Explorer]:::ui
+        Priority[Maintenance Priority Board]:::ui
+        Assistant[AI Diagnostic Chatbot]:::ui
     end
 
-    subgraph Simulation Engine
-        PhysicsSim[telemetry.ts - Physics Degradation Engine]
-        PhysicsSim -->|Simulates Fouling & Erosion| Diagnostics
-    end
+    %% Connections
+    CSV_Train --> Parser
+    CSV_Test --> Parser
+    CSV_GT --> Parser
+    CSV_Comp --> Parser
 
-    ActiveData --> Explorer
-    Diagnostics -.->|Reads| ActiveData
+    Joiner --> Overview
+    Joiner --> Diagnostics
+    Joiner --> Explorer
+    Joiner --> Priority
+    Joiner --> Assistant
 ```
 
 ---
@@ -63,11 +75,33 @@ graph TD
 The simulated four-stage turbojet engine models thermodynamic changes across key stations. Telemetry parameters represent actual physical readings from these stations:
 
 ```mermaid
-graph LR
-    Station1[Inlet - T2 / P2] --> Station2[Compressor - Compressor Health]
-    Station2 --> Station3[Combustor - T3 / P3]
-    Station3 --> Station4[Turbine - T4 / Turbine Health]
-    Station4 --> Station5[Nozzle - Thrust / TSFC]
+flowchart LR
+    %% Style Definitions
+    classDef station fill:#0b111e,stroke:#0ea5e9,stroke-width:2px,color:#ffffff,font-weight:bold;
+    classDef telemetry fill:#121b2d,stroke:#14b8a6,stroke-width:1.2px,color:#e2e8f0;
+    classDef health fill:#121b2d,stroke:#ef4444,stroke-width:1.2px,color:#fca5a5;
+
+    %% Flow Path
+    S1[Station 2.0 <br> Air Inlet]:::station
+    S2[Station 2.5 <br> Compressor Stage]:::station
+    S3[Station 3.0 <br> Combustor Chamber]:::station
+    S4[Station 4.0 <br> Turbine Stage]:::station
+    S5[Station 5.0 <br> Exhaust Nozzle]:::station
+
+    S1 --> S2 --> S3 --> S4 --> S5
+
+    %% Parameter mappings
+    P1["Altitude, Mach, Tamb, Pamb, P2, T2"]:::telemetry
+    P2["Compressor Health Index"]:::health
+    P3["Fuel Flow, T3, P3"]:::telemetry
+    P4["Turbine Health, T4, P4"]:::health
+    P5["Thrust, TSFC"]:::telemetry
+
+    P1 -.-> S1
+    P2 -.-> S2
+    P3 -.-> S3
+    P4 -.-> S4
+    P5 -.-> S5
 ```
 
 ### Sensor Telemetry Mappings
