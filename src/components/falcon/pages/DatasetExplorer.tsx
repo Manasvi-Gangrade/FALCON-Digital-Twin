@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useRef } from "react";
-import { Database, UploadCloud, FileSpreadsheet, LineChart as ChartIcon, CheckCircle2, Loader2, AlertCircle, Cpu, Layers, Activity } from "lucide-react";
+import { Database, UploadCloud, FileSpreadsheet, LineChart as ChartIcon, CheckCircle2, Loader2, AlertCircle, Cpu, Layers, Activity, Download, Eye } from "lucide-react";
 import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, Tooltip, CartesianGrid, Legend } from "recharts";
 import { cn } from "@/lib/utils";
 
@@ -54,6 +54,7 @@ export function DatasetExplorer() {
   
   const [customData, setCustomData] = useState<DataRow[] | null>(null);
   const [customFileName, setCustomFileName] = useState<string>("");
+  const [previewFile, setPreviewFile] = useState<"train" | "test" | "ground_truth" | "complete">("train");
   
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -214,7 +215,6 @@ export function DatasetExplorer() {
     setCustomFileName("");
   };
 
-  // Find unique engines present in the loaded dataset
   const availableEngineIds = useMemo(() => {
     const source = datasetSource === "train" 
       ? trainData 
@@ -224,6 +224,22 @@ export function DatasetExplorer() {
     const ids = Array.from(new Set(source.map(row => row.EngineID))).filter(id => id > 0);
     return ids.sort((a, b) => a - b);
   }, [datasetSource, trainData, testData, completeData]);
+
+  // Derived preview data for downloaded datasets explorer
+  const previewData = useMemo(() => {
+    switch (previewFile) {
+      case "train": return trainData;
+      case "test": return testData;
+      case "ground_truth": return groundTruthData;
+      case "complete": return completeData;
+      default: return [];
+    }
+  }, [previewFile, trainData, testData, groundTruthData, completeData]);
+
+  const previewHeaders = useMemo(() => {
+    if (previewData.length === 0) return [];
+    return Object.keys(previewData[0]);
+  }, [previewData]);
 
   // Aggregate statistics for overview panel
   const stats = useMemo(() => {
@@ -635,6 +651,169 @@ export function DatasetExplorer() {
                   <div className="text-[10px] text-hud-muted mt-2.5 text-right italic">
                     Showing top 10 cycles of {activeData.length} records. Custom CSV uploads automatically update this workspace.
                   </div>
+                </div>
+              </div>
+
+              {/* Already Uploaded Datasets Section */}
+              <div className="panel panel-accent-cyan p-5 shadow-lg bg-[color:var(--hud-panel)] border-hud-cyan/30">
+                <div className="flex flex-col md:flex-row md:items-center justify-between border-b border-hud-border pb-3 mb-4 gap-2">
+                  <div className="flex items-center gap-2.5">
+                    <Database className="h-5 w-5 text-hud-cyan glow-cyan" />
+                    <div>
+                      <h2 className="mono text-sm font-bold text-slate-800 uppercase tracking-wide">
+                        Stored Engineering Datasets
+                      </h2>
+                      <p className="text-[10px] text-slate-500">
+                        Pre-packaged engineering telemetry and health files. Select to preview records or download files for local ML modeling.
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="mono text-[9px] text-hud-muted bg-[color:var(--hud-panel-2)] px-2 py-0.5 rounded border border-hud-border">
+                      4 Datasets Stored
+                    </span>
+                  </div>
+                </div>
+
+                {/* Dataset Cards Grid */}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 mb-5">
+                  {[
+                    {
+                      id: "train" as const,
+                      name: "train.csv",
+                      label: "Training Telemetry Set",
+                      description: "Flight parameters like fuel flow, RPM, temps (T2, T3, T4), and pressures (P3) across multiple cycles.",
+                      path: "/Datasets/train.csv"
+                    },
+                    {
+                      id: "test" as const,
+                      name: "test.csv",
+                      label: "Testing Telemetry Set",
+                      description: "Flight parameters used for validation, predictive maintenance modeling, and RUL estimations.",
+                      path: "/Datasets/test.csv"
+                    },
+                    {
+                      id: "ground_truth" as const,
+                      name: "ground_truth.csv",
+                      label: "Ground Truth Labels",
+                      description: "Component health targets (Compressor, Turbine, Combustor) and overall operational health indicators.",
+                      path: "/Datasets/ground_truth.csv"
+                    },
+                    {
+                      id: "complete" as const,
+                      name: "turbojet_complete_dataset.csv",
+                      label: "Consolidated Dataset",
+                      description: "Joined unified dataset merging both telemetry parameters and component health labels in one table.",
+                      path: "/Datasets/turbojet_complete_dataset.csv"
+                    }
+                  ].map((ds) => (
+                    <div 
+                      key={ds.id} 
+                      className={cn(
+                        "rounded border p-3 flex flex-col justify-between transition-all bg-[color:var(--hud-panel-2)]/30",
+                        previewFile === ds.id 
+                          ? "border-hud-cyan bg-hud-cyan/5 shadow-inner" 
+                          : "border-hud-border hover:border-slate-300"
+                      )}
+                    >
+                      <div>
+                        <div className="flex items-center justify-between mb-1">
+                          <span className="mono text-[9px] font-bold text-slate-800 uppercase tracking-wider">{ds.label}</span>
+                          {previewFile === ds.id && (
+                            <span className="h-1.5 w-1.5 rounded-full bg-hud-cyan glow-cyan" />
+                          )}
+                        </div>
+                        <h3 className="mono text-xs font-bold text-hud-cyan mb-1 truncate" title={ds.name}>{ds.name}</h3>
+                        <p className="text-[9px] text-slate-500 leading-normal mb-3.5">
+                          {ds.description}
+                        </p>
+                      </div>
+
+                      <div className="flex items-center gap-1.5">
+                        <button
+                          onClick={() => setPreviewFile(ds.id)}
+                          className={cn(
+                            "flex-1 flex items-center justify-center gap-1 py-1 rounded text-[9px] uppercase font-bold mono transition-all",
+                            previewFile === ds.id 
+                              ? "bg-hud-cyan text-white shadow-sm" 
+                              : "border border-hud-border text-slate-600 hover:bg-[color:var(--hud-panel-2)]"
+                          )}
+                        >
+                          <Eye className="h-2.5 w-2.5" />
+                          Preview
+                        </button>
+                        <a
+                          href={ds.path}
+                          download={ds.name}
+                          className="flex items-center justify-center p-1 rounded border border-hud-border text-slate-600 hover:bg-[color:var(--hud-panel-2)] transition-all"
+                          title={`Download ${ds.name}`}
+                        >
+                          <Download className="h-3 w-3" />
+                        </a>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Selected Dataset Preview Table */}
+                <div className="rounded border border-hud-border bg-[color:var(--hud-panel-2)]/10 overflow-hidden">
+                  <div className="flex items-center justify-between px-3 py-1.5 border-b border-hud-border bg-[color:var(--hud-panel-2)]/40">
+                    <div className="flex items-center gap-1.5">
+                      <Eye className="h-3 w-3 text-hud-cyan" />
+                      <span className="mono text-[9px] font-bold text-slate-800">
+                        File Preview &bull; {previewFile === "complete" ? "turbojet_complete_dataset" : previewFile}.csv (Top 5 Records)
+                      </span>
+                    </div>
+                    <span className="mono text-[8px] text-slate-400">
+                      {previewData.length} records loaded
+                    </span>
+                  </div>
+
+                  {previewData.length === 0 ? (
+                    <div className="py-6 text-center mono text-[10px] text-hud-muted">
+                      No records loaded. Please verify files are present in public/Datasets/.
+                    </div>
+                  ) : (
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-left border-collapse text-[10px] mono">
+                        <thead>
+                          <tr className="border-b border-hud-border text-hud-muted bg-[color:var(--hud-panel-2)]/55 text-[8px] uppercase">
+                            {previewHeaders.slice(0, 15).map((header) => (
+                              <th key={header} className="py-1.5 px-2.5 font-bold">
+                                {header}
+                              </th>
+                            ))}
+                            {previewHeaders.length > 15 && (
+                              <th className="py-1.5 px-2.5 font-bold text-hud-cyan">
+                                +{previewHeaders.length - 15} More
+                              </th>
+                            )}
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-hud-border text-slate-600">
+                          {previewData.slice(0, 5).map((row, rIdx) => (
+                            <tr key={rIdx} className="hover:bg-[color:var(--hud-panel-2)]/30">
+                              {previewHeaders.slice(0, 15).map((header) => {
+                                const val = row[header];
+                                return (
+                                  <td key={header} className="py-1 px-2.5 text-slate-700">
+                                    {typeof val === 'number' 
+                                      ? (val % 1 === 0 ? val : (val.toString().includes('.') && val.toString().split('.')[1].length > 4 ? val.toFixed(4) : val)) 
+                                      : String(val)}
+                                  </td>
+                                );
+                              })}
+                              {previewHeaders.length > 15 && (
+                                <td className="py-1 px-2.5 text-[9px] text-slate-400 italic">
+                                  ...
+                                </td>
+                              )}
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
