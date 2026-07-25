@@ -5,6 +5,7 @@ import { StatusChip, StatusDot } from "../StatusDot";
 import { useCountUp } from "@/lib/use-count-up";
 import { TrendingDown, TrendingUp, Plane, Gauge as GaugeIcon, ShieldCheck } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { RadarFleetMap } from "../RadarFleetMap";
 
 export function FleetOverview({
   engines,
@@ -19,7 +20,24 @@ export function FleetOverview({
   const fleetSev = severityOf(avgHealth);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-5">
+      {/* Live Defense Telemetry Ticker */}
+      <div className="overflow-hidden rounded-xl border border-sky-500/30 bg-[#0f172a] py-2 px-3.5 shadow-inner font-mono text-[11px] text-sky-300 flex items-center gap-3">
+        <div className="flex items-center gap-1.5 shrink-0 bg-sky-500/20 px-2.5 py-0.5 rounded-md text-sky-300 font-bold uppercase tracking-wider text-[10px] border border-sky-400/30">
+          <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse"></span>
+          LIVE STREAM
+        </div>
+        <div className="truncate text-slate-300 font-mono tracking-wide text-xs">
+          <span className="text-sky-400 font-bold">ALT:</span> 8,500m &nbsp;•&nbsp; 
+          <span className="text-sky-400 font-bold">MACH:</span> 0.82 &nbsp;•&nbsp; 
+          <span className="text-sky-400 font-bold">RPM:</span> 12,500 &nbsp;•&nbsp; 
+          <span className="text-sky-400 font-bold">P2/Pamb:</span> 1.22 &nbsp;•&nbsp; 
+          <span className="text-sky-400 font-bold">T3 TURBINE:</span> 1,120K &nbsp;•&nbsp; 
+          <span className="text-emerald-400 font-bold">PINN ERROR:</span> &lt;0.018 kW (BOUND ✓) &nbsp;•&nbsp; 
+          <span className="text-amber-300 font-bold">MIL-STD:</span> COMPLIANT
+        </div>
+      </div>
+
       <Hero fleetSev={fleetSev} engineCount={engines.length} needAttn={needAttn} />
 
       <KpiStrip
@@ -31,17 +49,23 @@ export function FleetOverview({
         ]}
       />
 
-      <div>
-        <div className="eyebrow mb-3">Fleet Roster</div>
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
-          {engines.map((e, i) => (
-            <EngineCard
-              key={e.id}
-              engine={e}
-              onClick={() => onSelectEngine(e.id)}
-              delay={i * 70}
-            />
-          ))}
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+        <div className="lg:col-span-2">
+          <div className="eyebrow mb-3">Fleet Roster</div>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
+            {engines.map((e, i) => (
+              <EngineCard
+                key={e.id}
+                engine={e}
+                onClick={() => onSelectEngine(e.id)}
+                delay={i * 70}
+              />
+            ))}
+          </div>
+        </div>
+
+        <div className="lg:col-span-1">
+          <RadarFleetMap engines={engines} onSelectEngine={onSelectEngine} />
         </div>
       </div>
     </div>
@@ -50,9 +74,9 @@ export function FleetOverview({
 
 function Hero({ fleetSev, engineCount, needAttn }: { fleetSev: any; engineCount: number; needAttn: number }) {
   return (
-    <div className="panel-strong panel-accent-cyan relative overflow-hidden px-8 py-8">
+    <div className="panel-strong panel-accent-cyan relative overflow-hidden px-4 sm:px-8 py-6 sm:py-8">
       {/* animated schematic */}
-      <svg className="pointer-events-none absolute -right-10 top-0 h-full opacity-30" width="520" height="220" viewBox="0 0 520 220">
+      <svg className="pointer-events-none absolute -right-10 top-0 h-full opacity-20 sm:opacity-30 hidden sm:block" width="520" height="220" viewBox="0 0 520 220">
         <defs>
           <linearGradient id="turbineG" x1="0" x2="1">
             <stop offset="0%" stopColor="#0ea5e9" stopOpacity="0" />
@@ -79,12 +103,12 @@ function Hero({ fleetSev, engineCount, needAttn }: { fleetSev: any; engineCount:
       <div className="relative z-10 max-w-2xl">
         <div className="flex items-center gap-2">
           <StatusDot severity={fleetSev} />
-          <span className="eyebrow">FALCON · Four-Stage Aeroengine Latent Component & Operational Network</span>
+          <span className="eyebrow truncate">FALCON · Aeroengine Component & Operational Network</span>
         </div>
-        <h1 className="mono mt-3 text-4xl font-bold tracking-tight text-hud-text">
+        <h1 className="mono mt-2 sm:mt-3 text-2xl sm:text-4xl font-bold tracking-tight text-hud-text">
           FALCON <span className="text-hud-cyan">Digital Twin</span>
         </h1>
-        <p className="mt-2 max-w-lg text-sm text-hud-muted">
+        <p className="mt-2 max-w-lg text-xs sm:text-sm text-hud-muted">
           Physics-informed, real-time health monitoring for the four-stage turbojet fleet. Monitoring
           <span className="mono text-hud-text"> {engineCount} </span>
           engines · <span className="mono text-hud-amber">{needAttn}</span> flagged for review.

@@ -64,33 +64,46 @@ export function PriorityBoard({
           return (
             <div key={e.id}>
               <div
-                className="anim-fade-up relative grid cursor-pointer grid-cols-[auto_2fr_1fr_1fr_1fr_auto] items-center gap-4 px-4 py-3 transition-all"
-                style={{ animationDelay: `${i * 60}ms`, order: i }}
+                className="anim-fade-up relative flex flex-col sm:grid cursor-pointer sm:grid-cols-[auto_2fr_1fr_1fr_1fr_auto] sm:items-center gap-3 sm:gap-4 px-3 sm:px-4 py-3 transition-all hover:bg-white/5"
+                style={{ animationDelay: `${i * 60}ms` }}
                 onClick={() => setExpanded(isOpen ? null : e.id)}
               >
-                {/* priority color bar */}
-                <div className="relative h-10 w-1.5 overflow-hidden rounded">
-                  <div
-                    className="absolute inset-0"
-                    style={{
-                      background: severityColor(e.severity),
-                    }}
-                  />
-                </div>
-                <div>
-                  <div className="mono flex items-center gap-2 text-sm font-bold">
-                    <span>{e.id}</span>
-                    <span className="text-hud-muted">·</span>
-                    <span className="text-hud-muted">{e.tail}</span>
+                <div className="flex items-center justify-between sm:contents">
+                  <div className="flex items-center gap-3">
+                    {/* priority color bar */}
+                    <div className="relative h-9 w-1.5 overflow-hidden rounded shrink-0">
+                      <div
+                        className="absolute inset-0"
+                        style={{
+                          background: severityColor(e.severity),
+                        }}
+                      />
+                    </div>
+                    <div>
+                      <div className="mono flex items-center gap-2 text-sm font-bold">
+                        <span>{e.id}</span>
+                        <span className="text-hud-muted">·</span>
+                        <span className="text-hud-muted">{e.tail}</span>
+                      </div>
+                      <div className="mono text-[10px] uppercase tracking-widest text-hud-muted">
+                        {e.model}
+                      </div>
+                    </div>
                   </div>
-                  <div className="mono text-[10px] uppercase tracking-widest text-hud-muted">
-                    {e.model}
+
+                  <div className="flex items-center gap-2 sm:hidden">
+                    <StatusChip severity={e.severity} />
+                    {isOpen ? <ChevronDown className="h-4 w-4 text-hud-muted" /> : <ChevronRight className="h-4 w-4 text-hud-muted" />}
                   </div>
                 </div>
-                <Field label="Health" value={e.health.toFixed(1)} color={severityColor(e.severity)} />
-                <Field label="RUL" value={`${e.rul.toFixed(0)} cyc`} />
-                <Field label="Confidence" value={`${e.confidence.toFixed(0)}%`} />
-                <div className="flex items-center gap-3">
+
+                <div className="grid grid-cols-3 gap-2 border-t border-hud-border/40 pt-2 sm:border-0 sm:pt-0">
+                  <Field label="Health" value={e.health.toFixed(1)} color={severityColor(e.severity)} />
+                  <Field label="RUL" value={`${e.rul.toFixed(0)} cyc`} />
+                  <Field label="Confidence" value={`${e.confidence.toFixed(0)}%`} />
+                </div>
+
+                <div className="hidden sm:flex items-center gap-3">
                   <StatusChip severity={e.severity} />
                   <div className="mono text-[10px] uppercase tracking-widest text-hud-muted">
                     Score <span className="text-hud-text">{score.toFixed(0)}</span>

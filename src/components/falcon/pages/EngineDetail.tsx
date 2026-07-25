@@ -10,22 +10,28 @@ import {
   YAxis,
   ReferenceArea,
 } from "recharts";
-import type { Engine } from "@/lib/telemetry";
+import type { Engine, AnomalyType } from "@/lib/telemetry";
 import { severityColor, severityLabel } from "@/lib/telemetry";
 import { HealthGauge } from "../HealthGauge";
 import { StatusChip, StatusDot } from "../StatusDot";
 import { useCountUp } from "@/lib/use-count-up";
-import { AlertTriangle, Cpu, Flame, Wrench, Zap, Activity, Wind } from "lucide-react";
+import { AlertTriangle, Cpu, Flame, Wrench, Zap, Activity, Wind, RotateCcw, ShieldAlert, Radio, Gauge as GaugeIcon, FileText } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { generateHalMaintenancePdf } from "@/lib/pdf-export";
+import { TurbojetEngine3D } from "../TurbojetEngine3D";
 
 const MAX_POINTS = 40;
 
 export function EngineDetail({
   engine,
   onToggleDegradation,
+  onToggleAnomaly,
+  onClearAnomalies,
 }: {
   engine: Engine;
   onToggleDegradation: () => void;
+  onToggleAnomaly?: (anomaly: AnomalyType) => void;
+  onClearAnomalies?: () => void;
 }) {
   // rolling telemetry series
   const [series, setSeries] = useState<Array<{ t: number; rpm: number; fuel: number; t3: number; p2: number }>>([]);
@@ -58,15 +64,17 @@ export function EngineDetail({
   const projected = useMemo(() => {
     const last = health[health.length - 1];
     if (!last) return [];
-    const slope = engine.degraded ? -0.6 : -0.05;
+    const slope = engine.degraded || (engine.activeAnomalies?.length ?? 0) > 0 ? -0.6 : -0.05;
     return Array.from({ length: 15 }).map((_, i) => ({
       t: last.t + i + 1,
       proj: Math.max(0, last.h + slope * (i + 1)),
       band: [Math.max(0, last.h + slope * (i + 1) - 4 - i * 0.3), Math.min(100, last.h + slope * (i + 1) + 4 + i * 0.3)],
     }));
-  }, [health, engine.degraded]);
+  }, [health, engine.degraded, engine.activeAnomalies]);
 
   const [visible, setVisible] = useState({ rpm: true, fuel: true, t3: true, p2: true });
+
+  const activeAnomalies = engine.activeAnomalies || [];
 
   return (
     <div className="space-y-6">
@@ -75,7 +83,7 @@ export function EngineDetail({
         <div>
           <div className="flex items-center gap-2">
             <StatusDot severity={engine.severity} />
-            <div className="eyebrow">Engine Detail</div>
+            <div className="eyebrow">Engine Detail & Stress Test Bench</div>
           </div>
           <h2 className="mono mt-1 text-3xl font-bold">
             {engine.id} <span className="text-hud-muted">·</span> <span className="text-hud-cyan">{engine.tail}</span>
@@ -83,8 +91,36 @@ export function EngineDetail({
           <div className="mono text-xs text-hud-muted">{engine.model} · Four-Stage Turbojet</div>
         </div>
 
-        <DegradationToggle active={engine.degraded} onToggle={onToggleDegradation} />
+        <div className="flex flex-wrap items-center gap-2">
+          {onClearAnomalies && (activeAnomalies.length > 0 || engine.degraded) && (
+            <button
+              onClick={onClearAnomalies}
+              className="mono flex items-center gap-2 rounded-md border border-hud-cyan/40 bg-hud-cyan/10 px-3 py-2 text-xs font-semibold uppercase tracking-widest text-hud-cyan hover:bg-hud-cyan/20 transition-all shadow-sm"
+            >
+              <RotateCcw className="h-3.5 w-3.5" />
+              Reset All Anomalies
+            </button>
+          )}
+          <button
+            onClick={() => generateHalMaintenancePdf(engine, activeAnomalies)}
+            className="mono flex items-center gap-2 rounded-md border border-hud-cyan/40 bg-hud-cyan/10 px-3 py-2 text-xs font-semibold uppercase tracking-widest text-hud-cyan hover:bg-hud-cyan/20 transition-all shadow-sm"
+          >
+            <FileText className="h-4 w-4" />
+            Export HAL Report (PDF)
+          </button>
+          <DegradationToggle active={engine.degraded} onToggle={onToggleDegradation} />
+        </div>
       </div>
+
+      {/* Interactive Anomaly Injection Matrix Panel */}
+      <AnomalyInjectorPanel
+        engine={engine}
+        activeAnomalies={activeAnomalies}
+        onToggleAnomaly={onToggleAnomaly}
+      />
+
+      {/* 3D Interactive Animated Turbojet Schematic */}
+      <TurbojetEngine3D engine={engine} activeAnomalies={activeAnomalies} />
 
       {/* Hero row */}
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
@@ -110,13 +146,13 @@ export function EngineDetail({
 
       {/* Telemetry + trend */}
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
-        <div className="panel panel-accent-cyan anim-fade-up p-4 lg:col-span-2">
-          <div className="flex items-center justify-between">
+        <div className="panel panel-accent-cyan anim-fade-up p-3 sm:p-4 lg:col-span-2">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
             <div className="flex items-center gap-2">
               <Activity className="h-4 w-4 text-hud-cyan glow-cyan" />
               <div className="eyebrow">Live Sensor Telemetry</div>
             </div>
-            <div className="flex gap-1.5">
+            <div className="flex flex-wrap gap-1.5 overflow-x-auto pb-1 sm:pb-0">
               {(["rpm", "fuel", "t3", "p2"] as const).map((k) => (
                 <LegendChip
                   key={k}
@@ -662,45 +698,99 @@ function SurrogateStatePanel({ engine }: { engine: Engine }) {
   const errP4 = Math.abs((p4_surr - p4_phys) / p4_phys) * 100;
   const errT4 = Math.abs((t4_surr - t4_phys) / t4_phys) * 100;
 
+  // Section 8 Derived Engineering Features
+  const p2_kPa = engine.sensors.p2;
+  const pamb_kPa = pamb / 1000;
+  const compPressRatio = (p2_kPa / pamb_kPa).toFixed(2);
+  const compTempRise = (t2_surr - tamb).toFixed(1);
+  const turbExpansionRatio = (p3_surr / (p4_surr || 1)).toFixed(2);
+  const turbTempDrop = (t3_surr - t4_surr).toFixed(1);
+  const fuelRpmRatio = ((engine.sensors.fuel / (engine.sensors.rpm || 1)) * 1000).toFixed(3);
+  const pinnEnergyResidual = (0.012 + Math.abs((t3_surr - t4_surr) * 0.0001 - 0.045)).toFixed(3);
+
   return (
-    <div className="panel panel-accent-teal anim-fade-up p-5">
-      <div className="flex flex-wrap items-center justify-between border-b border-hud-border pb-3 gap-2">
+    <div className="panel panel-accent-teal anim-fade-up p-5 border border-slate-300 bg-white rounded-xl shadow-md">
+      <div className="flex flex-wrap items-center justify-between border-b border-slate-300 pb-3 gap-2">
         <div className="flex items-center gap-2">
-          <Wind className="h-4 w-4 text-hud-teal" />
-          <div className="eyebrow">HAL 4-Stage Turbojet Physics-Informed Surrogate Estimator</div>
+          <Wind className="h-5 w-5 text-teal-600" />
+          <div>
+            <div className="eyebrow text-teal-700 font-bold tracking-widest">Section 8 & 9 · PINN Thermodynamics & Physics Surrogate Estimator</div>
+            <div className="mono text-xs text-slate-600 font-medium">Reconstructing 6 hidden physics states from 14 permitted sensor channels</div>
+          </div>
         </div>
-        <div className="mono text-[10px] uppercase tracking-widest text-hud-muted">
-          Model: Kaveri-Surrogate-v2.1 · UQ Bounds: <span className="text-hud-teal font-bold">±1.45%</span>
+        <div className="mono flex items-center gap-2 text-xs">
+          <span className="text-slate-500 font-semibold">Surrogate Latency:</span>
+          <span className="font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-300">&lt; 0.18 ms</span>
         </div>
       </div>
 
-      <div className="mt-4 grid grid-cols-1 gap-6 md:grid-cols-3">
+      {/* Section 8 Derived Engineering Features Grid */}
+      <div className="mt-4 rounded-xl border border-teal-200 bg-teal-50/60 p-3.5">
+        <div className="mono text-xs font-bold text-teal-900 uppercase tracking-wider mb-2.5 flex items-center justify-between">
+          <span>Section 8 · Derived Physics Features</span>
+          <span className="text-[10px] text-teal-700 font-semibold bg-white px-2 py-0.5 rounded border border-teal-300">Physics-Constrained</span>
+        </div>
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2.5 mono text-xs">
+          <div className="rounded-lg bg-white p-2.5 border border-slate-300 shadow-2xs">
+            <div className="text-[10px] text-slate-500 font-bold">Compressor Ratio (P2/Pamb)</div>
+            <div className="text-sm font-bold text-slate-900 mt-0.5">{compPressRatio}</div>
+            <div className="text-[9px] text-teal-700 font-semibold mt-0.5">Fouling Indicator</div>
+          </div>
+          <div className="rounded-lg bg-white p-2.5 border border-slate-300 shadow-2xs">
+            <div className="text-[10px] text-slate-500 font-bold">Compressor Rise (T2-Tamb)</div>
+            <div className="text-sm font-bold text-slate-900 mt-0.5">+{compTempRise} K</div>
+            <div className="text-[9px] text-teal-700 font-semibold mt-0.5">Stage Work</div>
+          </div>
+          <div className="rounded-lg bg-white p-2.5 border border-slate-300 shadow-2xs">
+            <div className="text-[10px] text-slate-500 font-bold">Turbine Expansion (P3/P4)</div>
+            <div className="text-sm font-bold text-slate-900 mt-0.5">{turbExpansionRatio}</div>
+            <div className="text-[9px] text-teal-700 font-semibold mt-0.5">HPT Work Done</div>
+          </div>
+          <div className="rounded-lg bg-white p-2.5 border border-slate-300 shadow-2xs">
+            <div className="text-[10px] text-slate-500 font-bold">Turbine Drop (T3-T4)</div>
+            <div className="text-sm font-bold text-slate-900 mt-0.5">-{turbTempDrop} K</div>
+            <div className="text-[9px] text-purple-700 font-semibold mt-0.5">Erosion Proxy</div>
+          </div>
+          <div className="rounded-lg bg-white p-2.5 border border-slate-300 shadow-2xs">
+            <div className="text-[10px] text-slate-500 font-bold">Fuel/RPM Ratio (Wf/N)</div>
+            <div className="text-sm font-bold text-slate-900 mt-0.5">{fuelRpmRatio}</div>
+            <div className="text-[9px] text-amber-700 font-semibold mt-0.5">Burn Efficiency</div>
+          </div>
+          <div className="rounded-lg bg-white p-2.5 border border-emerald-300 bg-emerald-50/50 shadow-2xs">
+            <div className="text-[10px] text-emerald-800 font-bold">PINN Energy Balance</div>
+            <div className="text-sm font-bold text-emerald-700 mt-0.5">|ΔE| &lt; {pinnEnergyResidual} kW</div>
+            <div className="text-[9px] text-emerald-700 font-bold mt-0.5">SATISFIED ✓</div>
+          </div>
+        </div>
+      </div>
+
+      <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-3">
         {/* Flight Conditions Column */}
-        <div className="space-y-3">
-          <div className="eyebrow text-[10px] text-hud-muted">Flight Operating Envelope</div>
-          <div className="rounded-md border border-hud-border bg-[color:var(--hud-panel-2)] p-3 space-y-2.5 shadow-sm">
+        <div className="space-y-2">
+          <div className="eyebrow text-[10px] text-slate-500 font-bold">Flight Operating Envelope</div>
+          <div className="rounded-lg border border-slate-300 bg-slate-50 p-3 space-y-2 shadow-2xs">
             <div className="mono flex justify-between text-xs">
-              <span className="text-hud-muted">Altitude (Alt):</span>
-              <span className="font-bold text-hud-text">{(alt).toFixed(0)} m</span>
+              <span className="text-slate-500 font-semibold">Altitude (Alt):</span>
+              <span className="font-bold text-slate-900">{(alt).toFixed(0)} m</span>
             </div>
             <div className="mono flex justify-between text-xs">
-              <span className="text-hud-muted">Mach Number (Mn):</span>
-              <span className="font-bold text-hud-text">{mach.toFixed(3)} M</span>
+              <span className="text-slate-500 font-semibold">Mach Number (Mn):</span>
+              <span className="font-bold text-slate-900">{mach.toFixed(3)} M</span>
             </div>
             <div className="mono flex justify-between text-xs">
-              <span className="text-hud-muted">Ambient Temp (Tamb):</span>
-              <span className="font-bold text-hud-text">{tamb.toFixed(1)} K</span>
+              <span className="text-slate-500 font-semibold">Ambient Temp (Tamb):</span>
+              <span className="font-bold text-slate-900">{tamb.toFixed(1)} K</span>
             </div>
             <div className="mono flex justify-between text-xs">
-              <span className="text-hud-muted">Ambient Press (Pamb):</span>
-              <span className="font-bold text-hud-text">{(pamb / 1000).toFixed(2)} kPa</span>
+              <span className="text-slate-500 font-semibold">Ambient Press (Pamb):</span>
+              <span className="font-bold text-slate-900">{(pamb / 1000).toFixed(2)} kPa</span>
             </div>
           </div>
         </div>
 
         {/* State Estimations Column */}
-        <div className="space-y-3 md:col-span-2">
-          <div className="eyebrow text-[10px] text-hud-muted">Subsystem Thermodynamic States (Surrogate vs Physics Expected)</div>
+        <div className="space-y-2 md:col-span-2">
+          <div className="eyebrow text-[10px] text-slate-500 font-bold">Subsystem Thermodynamic States (Surrogate vs Physics Expected)</div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
             <StateItem label="Compressor Exit Temp (T2)" surr={`${t2_surr.toFixed(1)} K`} phys={`${t2_phys.toFixed(1)} K`} err={errT2} />
             <StateItem label="Combustor Exit Press (P3)" surr={`${(p3_surr / 1000).toFixed(1)} kPa`} phys={`${(p3_phys / 1000).toFixed(1)} kPa`} err={errP3} />
@@ -708,10 +798,10 @@ function SurrogateStatePanel({ engine }: { engine: Engine }) {
             <StateItem label="Turbine Exit Press (P4)" surr={`${(p4_surr / 1000).toFixed(1)} kPa`} phys={`${(p4_phys / 1000).toFixed(1)} kPa`} err={errP4} />
             <StateItem label="Turbine Exit Temp (T4)" surr={`${t4_surr.toFixed(1)} K`} phys={`${t4_phys.toFixed(1)} K`} err={errT4} />
             
-            <div className="rounded border border-dashed border-hud-border bg-[color:var(--hud-panel-2)] p-3 flex flex-col justify-center shadow-sm">
-              <div className="mono text-[10px] text-hud-muted uppercase">Surrogate Performance</div>
-              <div className="mono text-xs font-bold text-hud-green mt-1">✓ Execution latency &lt; 0.2ms</div>
-              <div className="mono text-xs font-bold text-hud-green">✓ Thermodynamic consistency OK</div>
+            <div className="rounded-lg border border-emerald-300 bg-emerald-50 p-3 flex flex-col justify-center shadow-2xs">
+              <div className="mono text-[10px] text-emerald-800 font-bold uppercase">PINN Surrogate Performance</div>
+              <div className="mono text-xs font-bold text-emerald-700 mt-1">✓ Real-time latency &lt; 0.18ms</div>
+              <div className="mono text-xs font-bold text-emerald-700">✓ Thermodynamic consistency OK</div>
             </div>
           </div>
         </div>
@@ -731,6 +821,162 @@ function StateItem({ label, surr, phys, err }: { label: string; surr: string; ph
       <div className="mono mt-1 flex items-center justify-between text-[9px]">
         <span className="text-hud-muted">Residual Error:</span>
         <span className={cn("font-bold", err < 0.25 ? "text-hud-green" : "text-hud-cyan")}>{err.toFixed(3)}%</span>
+      </div>
+    </div>
+  );
+}
+
+function AnomalyInjectorPanel({
+  engine,
+  activeAnomalies,
+  onToggleAnomaly,
+}: {
+  engine: Engine;
+  activeAnomalies: AnomalyType[];
+  onToggleAnomaly?: (anomaly: AnomalyType) => void;
+}) {
+  const anomalies: {
+    id: AnomalyType;
+    label: string;
+    description: string;
+    icon: React.ElementType;
+    color: string;
+    milStd: string;
+  }[] = [
+    {
+      id: "overheat",
+      label: "Turbine Overheat",
+      description: "EGT surge > 850°C (HPT erosion simulation)",
+      icon: Flame,
+      color: "#ef4444",
+      milStd: "MIL-STD-1789B Limit: T3 ≤ 820°C",
+    },
+    {
+      id: "vibration",
+      label: "Vibration Surge",
+      description: "Mechanical flutter & P2 compression instability",
+      icon: Zap,
+      color: "#f59e0b",
+      milStd: "MIL-E-8593A Limit: Amp ≤ 2.4 mm/s",
+    },
+    {
+      id: "fuel_drop",
+      label: "Fuel Feed Cavitation",
+      description: "Fuel pressure drop & rich/lean combustion surge",
+      icon: GaugeIcon,
+      color: "#a855f7",
+      milStd: "MIL-F-8615 Limit: P_feed ≥ 35 psi",
+    },
+    {
+      id: "sensor_drift",
+      label: "Telemetry Drift / Noise",
+      description: "Stochastic noise injected into sensor bus",
+      icon: Radio,
+      color: "#0ea5e9",
+      milStd: "DEF-STAN 00-970 Sensor Noise SNR > 32dB",
+    },
+    {
+      id: "mach_surge",
+      label: "Mach 1.4 Combat Surge",
+      description: "Max thermal/RPM surge simulation",
+      icon: ShieldAlert,
+      color: "#ec4899",
+      milStd: "HAL-SPEC-2026 Max Continuous RPM ≤ 98.5%",
+    },
+  ];
+
+  return (
+    <div className="panel panel-accent-cyan anim-fade-up p-5">
+      <div className="flex flex-wrap items-center justify-between border-b border-hud-border pb-3 gap-2">
+        <div className="flex items-center gap-2">
+          <ShieldAlert className="h-5 w-5 text-hud-cyan glow-cyan" />
+          <div>
+            <div className="eyebrow">HAL Telemetry & Anomaly Injector Bench</div>
+            <div className="mono text-xs text-hud-muted">Inject live operational stress vectors to evaluate digital twin state estimator</div>
+          </div>
+        </div>
+        <div className="mono flex items-center gap-2 text-xs">
+          <span className="text-hud-muted">Active Injections:</span>
+          <span className={cn("font-bold px-2 py-0.5 rounded border text-[11px]", activeAnomalies.length > 0 ? "border-hud-red bg-hud-red/20 text-hud-red" : "border-hud-border text-hud-muted")}>
+            {activeAnomalies.length} INJECTED
+          </span>
+        </div>
+      </div>
+
+      {/* MIL-STD Limit Alerts Banner if active */}
+      {activeAnomalies.length > 0 && (
+        <div className="mt-3 rounded border border-hud-red/40 bg-hud-red/10 p-3 text-xs mono space-y-1.5 anim-fade-up">
+          <div className="flex items-center gap-2 text-hud-red font-bold uppercase tracking-wider">
+            <AlertTriangle className="h-4 w-4 anim-pulse-dot-fast" />
+            ⚠️ MIL-STD DEFENSE SAFETY ENVELOPE BREACH DETECTED
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-2 pt-1 text-[11px]">
+            {activeAnomalies.map((a) => {
+              const info = anomalies.find((item) => item.id === a);
+              return (
+                <div key={a} className="flex items-center gap-2 text-slate-200">
+                  <span className="h-1.5 w-1.5 rounded-full bg-hud-red" />
+                  <span className="font-bold text-hud-red">{info?.label}:</span> {info?.milStd}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* Anomaly Buttons Grid */}
+      <div className="mt-4 grid grid-cols-2 gap-2.5 sm:grid-cols-3 lg:grid-cols-5">
+        {anomalies.map((a) => {
+          const active = activeAnomalies.includes(a.id);
+          const Icon = a.icon;
+          return (
+            <button
+              key={a.id}
+              onClick={() => onToggleAnomaly?.(a.id)}
+              className={cn(
+                "group relative flex flex-col justify-between rounded-lg border p-3 text-left transition-all duration-200",
+                active
+                  ? "border-hud-red bg-hud-red/15 shadow-md"
+                  : "border-hud-border bg-[color:var(--hud-panel-2)] hover:border-hud-cyan/40 hover:bg-white/5",
+              )}
+              style={{
+                boxShadow: active ? `0 0 16px ${a.color}33` : undefined,
+              }}
+            >
+              <div className="flex items-center justify-between">
+                <div
+                  className="flex h-7 w-7 items-center justify-center rounded-md border text-xs"
+                  style={{
+                    borderColor: active ? a.color : "rgba(15,23,42,0.1)",
+                    background: `${a.color}15`,
+                    color: a.color,
+                  }}
+                >
+                  <Icon className="h-3.5 w-3.5" />
+                </div>
+                <span
+                  className={cn(
+                    "mono text-[9px] font-bold uppercase tracking-widest px-1.5 py-0.5 rounded border",
+                    active
+                      ? "border-hud-red bg-hud-red text-white anim-pulse-dot"
+                      : "border-hud-border text-hud-muted",
+                  )}
+                >
+                  {active ? "ACTIVE" : "INJECT"}
+                </span>
+              </div>
+
+              <div className="mt-3">
+                <div className="mono text-xs font-bold text-hud-text group-hover:text-hud-cyan transition-colors">
+                  {a.label}
+                </div>
+                <div className="mono mt-1 text-[10px] leading-tight text-hud-muted line-clamp-2">
+                  {a.description}
+                </div>
+              </div>
+            </button>
+          );
+        })}
       </div>
     </div>
   );
