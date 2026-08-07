@@ -5,6 +5,8 @@
 **Team Lead**: Manasvi Gangrade (gangrademanasvi@gmail.com)  
 **Team Members**: Muskan Lodhi, Suhani Sharma  
 
+**Frontend Deployment**: https://falcon-digital-twin.vercel.app/
+**Backend Deployment**: https://falcon-digital-twin-backend.onrender.com
 ---
 
 ## Executive Overview
