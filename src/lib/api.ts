@@ -3,7 +3,10 @@
  * Aerothon 2026 | Team Avyay (IIT Indore x HAL)
  */
 
-export const FASTAPI_BASE_URL = "http://localhost:8000";
+export const FASTAPI_BASE_URL = import.meta.env.VITE_BACKEND_URL || 
+  (typeof window !== "undefined" && window.location.hostname !== "localhost" && window.location.hostname !== "127.0.0.1"
+    ? "https://falcon-digital-twin-backend.onrender.com"
+    : "http://localhost:8000");
 
 export type BackendStatus = {
   online: boolean;
