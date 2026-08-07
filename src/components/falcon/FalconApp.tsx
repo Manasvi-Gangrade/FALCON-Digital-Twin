@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Activity, LayoutGrid, Gauge, MessageSquareText, ListOrdered, ChevronLeft, ChevronRight, Database, Sliders, Network } from "lucide-react";
+import { Activity, LayoutGrid, Gauge, MessageSquareText, ListOrdered, ChevronLeft, ChevronRight, Database, Sliders, Network, Atom } from "lucide-react";
 import { BootSequence } from "./BootSequence";
 import { TopBar } from "./TopBar";
 import { FleetOverview } from "./pages/FleetOverview";
@@ -9,18 +9,20 @@ import { PriorityBoard } from "./pages/PriorityBoard";
 import { DatasetExplorer } from "./pages/DatasetExplorer";
 import { WhatIfSandbox } from "./pages/WhatIfSandbox";
 import { KnowledgeGraphView } from "./pages/KnowledgeGraphView";
+import { PhysicsReference } from "./pages/PhysicsReference";
 import { initialEngines, tickEngine, type Engine } from "@/lib/telemetry";
 import { cn } from "@/lib/utils";
 
 import { soundFx } from "@/lib/audio-effects";
 
-export type PageKey = "overview" | "engine" | "dataset" | "graph" | "whatif" | "assistant" | "priority";
+export type PageKey = "overview" | "engine" | "dataset" | "graph" | "whatif" | "physics" | "assistant" | "priority";
 
 const NAV: { key: PageKey; label: string; icon: React.ElementType }[] = [
   { key: "overview", label: "Fleet Overview", icon: LayoutGrid },
   { key: "engine", label: "Engine Detail", icon: Gauge },
   { key: "graph", label: "Reasoning Graph", icon: Network },
   { key: "whatif", label: "What-If Simulator", icon: Sliders },
+  { key: "physics", label: "Physics Reference", icon: Atom },
   { key: "dataset", label: "Dataset Explorer", icon: Database },
   { key: "assistant", label: "AI Assistant", icon: MessageSquareText },
   { key: "priority", label: "Priority Board", icon: ListOrdered },
@@ -105,7 +107,7 @@ export function FalconApp() {
       {/* Sidebar - Desktop & Mobile Drawer */}
       <aside
         className={cn(
-          "fixed left-0 top-0 z-50 h-screen border-r border-hud-border bg-[#121b2d]/95 backdrop-blur-md transition-all duration-300 ease-out",
+          "fixed left-0 top-0 z-50 h-screen border-r border-slate-800 bg-[#121b2d]/95 backdrop-blur-md transition-all duration-300 ease-out",
           // Mobile state
           mobileMenuOpen ? "translate-x-0 w-64 md:translate-x-0" : "-translate-x-full md:translate-x-0",
           // Desktop width state
@@ -123,7 +125,7 @@ export function FalconApp() {
           />
         </div>
 
-        <div className="flex h-14 items-center justify-between border-b border-hud-border px-4">
+        <div className="flex h-14 items-center justify-between border-b border-slate-800 px-4">
           <div className="flex items-center gap-2">
             <FalconLogo />
             {(sidebarOpen || mobileMenuOpen) && (
@@ -152,28 +154,21 @@ export function FalconApp() {
                   setMobileMenuOpen(false);
                 }}
                 className={cn(
-                  "group relative flex items-center gap-3 rounded-md px-3 py-2.5 text-sm transition-all",
+                  "group relative flex items-center gap-3 rounded-md px-3 py-2.5 text-sm transition-all cursor-pointer font-bold",
                   active
-                    ? "bg-hud-cyan/15 text-hud-cyan font-bold"
-                    : "text-slate-400 hover:bg-white/5 hover:text-slate-100",
+                    ? "bg-sky-600 text-white shadow-md shadow-sky-950/60"
+                    : "text-slate-300 hover:bg-slate-800/80 hover:text-white",
                 )}
               >
-                {active && (
-                  <span
-                    className="absolute left-0 top-1/2 h-6 w-[3px] -translate-y-1/2 rounded-r"
-                    style={{ background: "var(--hud-cyan)" }}
-                  />
-                )}
                 <Icon
-                  className={cn("h-4 w-4 shrink-0", active && "glow-cyan")}
+                  className={cn("h-4 w-4 shrink-0", active ? "text-white" : "text-sky-400")}
                   strokeWidth={active ? 2.4 : 1.8}
                 />
                 <span
                   className={cn(
-                    "eyebrow",
+                    "mono text-xs tracking-wider",
                     !sidebarOpen && !mobileMenuOpen && "md:hidden",
                   )}
-                  style={{ color: "inherit", letterSpacing: "0.14em" }}
                 >
                   {n.label}
                 </span>
@@ -185,7 +180,7 @@ export function FalconApp() {
         {/* Desktop Collapse Toggle */}
         <button
           onClick={() => setSidebarOpen((s) => !s)}
-          className="hidden md:flex absolute bottom-4 left-1/2 -translate-x-1/2 rounded-full border border-hud-border bg-[#121b2d] p-1.5 text-slate-400 hover:text-hud-cyan shadow-sm hover:border-hud-cyan/50"
+          className="hidden md:flex absolute bottom-4 left-1/2 -translate-x-1/2 rounded-full border border-slate-700 bg-[#121b2d] p-1.5 text-slate-300 hover:text-white shadow-sm hover:border-sky-400 cursor-pointer"
           aria-label="Toggle sidebar"
         >
           {sidebarOpen ? <ChevronLeft className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
@@ -193,8 +188,8 @@ export function FalconApp() {
 
         {(sidebarOpen || mobileMenuOpen) && (
           <div className="absolute bottom-16 left-0 right-0 px-4">
-            <div className="flex items-center gap-2 text-[10px] text-hud-muted mono uppercase tracking-widest">
-              <Activity className="h-3 w-3 text-hud-green" />
+            <div className="flex items-center gap-2 text-[10px] text-emerald-400 mono font-bold uppercase tracking-widest bg-emerald-950/40 border border-emerald-500/30 px-2 py-1 rounded">
+              <Activity className="h-3 w-3 text-emerald-400 animate-pulse" />
               LINK STABLE
             </div>
           </div>
@@ -235,6 +230,7 @@ export function FalconApp() {
           )}
           {page === "graph" && <KnowledgeGraphView engine={selected} />}
           {page === "whatif" && <WhatIfSandbox engine={selected} />}
+          {page === "physics" && <PhysicsReference selectedEngine={selected} />}
           {page === "assistant" && <Assistant engine={selected} />}
           {page === "priority" && (
             <PriorityBoard engines={engines} onOpenEngine={goToEngine} />

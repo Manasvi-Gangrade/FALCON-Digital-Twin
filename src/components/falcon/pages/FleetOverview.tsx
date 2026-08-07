@@ -6,6 +6,7 @@ import { useCountUp } from "@/lib/use-count-up";
 import { TrendingDown, TrendingUp, Plane, Gauge as GaugeIcon, ShieldCheck } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { RadarFleetMap } from "../RadarFleetMap";
+import { ExplainabilityHoverTooltip } from "./EngineDetail";
 
 export function FleetOverview({
   engines,
@@ -22,12 +23,12 @@ export function FleetOverview({
   return (
     <div className="space-y-5">
       {/* Live Defense Telemetry Ticker */}
-      <div className="overflow-hidden rounded-xl border border-sky-500/30 bg-[#0f172a] py-2 px-3.5 shadow-inner font-mono text-[11px] text-sky-300 flex items-center gap-3">
-        <div className="flex items-center gap-1.5 shrink-0 bg-sky-500/20 px-2.5 py-0.5 rounded-md text-sky-300 font-bold uppercase tracking-wider text-[10px] border border-sky-400/30">
-          <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse"></span>
+      <div className="overflow-hidden rounded-xl border border-sky-500/30 bg-[#0f172a] py-2.5 px-4 shadow-inner font-mono text-xs sm:text-sm text-sky-300 flex items-center gap-3">
+        <div className="flex items-center gap-2 shrink-0 bg-sky-500/20 px-3 py-1 rounded-md text-sky-300 font-extrabold uppercase tracking-wider text-xs border border-sky-400/30">
+          <span className="h-2.5 w-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
           LIVE STREAM
         </div>
-        <div className="truncate text-slate-300 font-mono tracking-wide text-xs">
+        <div className="truncate text-slate-200 font-mono tracking-wide text-xs sm:text-sm font-semibold">
           <span className="text-sky-400 font-bold">ALT:</span> 8,500m &nbsp;•&nbsp; 
           <span className="text-sky-400 font-bold">MACH:</span> 0.82 &nbsp;•&nbsp; 
           <span className="text-sky-400 font-bold">RPM:</span> 12,500 &nbsp;•&nbsp; 
@@ -51,8 +52,8 @@ export function FleetOverview({
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         <div className="lg:col-span-2">
-          <div className="eyebrow mb-3">Fleet Roster</div>
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
+          <div className="eyebrow mb-3 text-sm font-extrabold">Fleet Roster</div>
+          <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
             {engines.map((e, i) => (
               <EngineCard
                 key={e.id}
@@ -220,7 +221,7 @@ function EngineCard({
     <button
       onClick={onClick}
       className={cn(
-        "panel anim-fade-up group relative overflow-hidden p-4 text-left transition-all hover:-translate-y-1 hover:shadow-lg",
+        "panel anim-fade-up group relative p-4 text-left transition-all hover:-translate-y-1 hover:shadow-lg",
         severityAccentClass
       )}
       style={{
@@ -234,12 +235,25 @@ function EngineCard({
       />
       <div className="relative flex items-center justify-between">
         <div>
-          <div className="mono text-lg font-bold text-hud-text">{engine.id}</div>
-          <div className="mono text-[10px] uppercase tracking-widest text-hud-muted">
+          <div className="mono text-xl font-bold text-hud-text">{engine.id}</div>
+          <div className="mono text-xs font-semibold uppercase tracking-wider text-hud-muted mt-0.5">
             {engine.tail} · {engine.model}
           </div>
         </div>
-        <StatusChip severity={engine.severity} />
+        <div className="flex items-center gap-1.5" onClick={(e) => e.stopPropagation()}>
+          <ExplainabilityHoverTooltip
+            title={`${engine.id} Health Diagnosis`}
+            reason={
+              engine.degraded
+                ? "Active thermal degradation detected. EGT residual variance +18.4K above PINN expected bounds."
+                : "All 14 sensor channels matching PINN physics surrogate bounds."
+            }
+            formula="EGT_res = EGT_sensor - EGT_pinn"
+            primarySensor={engine.degraded ? "T3 Turbine Temp" : "Nominal Data"}
+            milStd="MIL-STD-1789B"
+          />
+          <StatusChip severity={engine.severity} />
+        </div>
       </div>
 
       <div className="relative mt-3 flex items-center gap-4">

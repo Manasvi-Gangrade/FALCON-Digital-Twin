@@ -144,10 +144,10 @@
 @utility eyebrow {
   font-family: var(--font-sans);
   text-transform: uppercase;
-  letter-spacing: 0.18em;
-  font-size: 0.68rem;
-  color: var(--hud-muted);
-  font-weight: 600;
+  letter-spacing: 0.12em;
+  font-size: 0.82rem;
+  color: #475569;
+  font-weight: 700;
 }
 
 @utility mono {

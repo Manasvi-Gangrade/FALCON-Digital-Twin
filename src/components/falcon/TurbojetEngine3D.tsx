@@ -29,6 +29,9 @@ export function TurbojetEngine3D({
             <h3 className="mono text-lg font-bold text-slate-900 tracking-wide">
               Four-Stage Turbojet Subsystem Blueprint
             </h3>
+            <p className="text-xs text-slate-600 font-sans mt-0.5">
+              <strong>What this schematic shows:</strong> Interactive structural cutaway of single-spool 4-stage turbojet engine. Click on HPC Compressor, Combustor, HPT Turbine, or Exhaust Nozzle to inspect live thermal & pressure state.
+            </p>
           </div>
         </div>
 

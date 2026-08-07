@@ -42,8 +42,11 @@ export function RadarFleetMap({
             <Radio className="h-4 w-4 text-emerald-600 animate-pulse" />
           </div>
           <div>
-            <div className="eyebrow text-emerald-700 font-bold">Aerothon Sector IV Airspace</div>
+            <div className="eyebrow text-emerald-700 font-bold">Aerothon Sector IV Airspace Radar</div>
             <span className="mono text-xs font-bold text-slate-900">Tactical Fighter Sortie Radar</span>
+            <p className="text-[10px] text-slate-600 font-sans mt-0.5">
+              <strong>What this radar shows:</strong> Real-time polar airspace positioning & live sortie health status for all 5 monitored HAL fighter jet units within 150km defense sector.
+            </p>
           </div>
         </div>
         <span className="mono text-[10px] rounded bg-white px-2 py-1 border border-slate-300 text-sky-700 font-bold shadow-sm">

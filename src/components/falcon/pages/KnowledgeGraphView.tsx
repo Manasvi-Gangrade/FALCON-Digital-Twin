@@ -51,16 +51,16 @@ export function KnowledgeGraphView({ engine }: { engine: Engine }) {
         <div>
           <div className="flex items-center gap-2">
             <Network className="h-5 w-5 text-hud-cyan glow-cyan" />
-            <div className="eyebrow">Aerothon Section 14 · Engineering Reasoning Engine</div>
+            <div className="eyebrow text-sm font-bold text-sky-800">Interactive Engineering Knowledge Graph & Causal Chain</div>
           </div>
-          <h2 className="mono mt-1 text-xl sm:text-2xl font-bold">Interactive Engineering Knowledge Graph</h2>
-          <p className="mono text-xs text-hud-muted">
-            Trace causal links from raw sensor telemetry anomalies ➔ subsystem failure mechanisms ➔ recommended maintenance actions.
+          <h2 className="mono mt-1 text-xl sm:text-2xl font-bold">Causal Engineering Reasoning Graph</h2>
+          <p className="text-xs text-slate-700 font-sans mt-1">
+            <strong>What this graph shows:</strong> Traces the exact 5-stage causal diagnostic chain from raw sensor telemetry anomalies ➔ target subsystem identification ➔ thermodynamic failure mechanisms ➔ HAL depot maintenance actions ➔ MIL-STD sortie clearance.
           </p>
         </div>
 
-        <div className="mono text-xs rounded-md border border-hud-border bg-[color:var(--hud-panel)] px-3 py-1.5 shadow-sm text-hud-cyan font-bold">
-          Active Context: {engine.id} ({engine.tail})
+        <div className="mono text-xs rounded-md border border-sky-400/40 bg-sky-950/20 px-3 py-1.5 shadow-sm text-sky-700 font-bold">
+          Active Engine Context: {engine.id} ({engine.tail})
         </div>
       </div>
 

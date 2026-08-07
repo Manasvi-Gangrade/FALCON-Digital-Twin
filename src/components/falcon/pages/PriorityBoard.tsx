@@ -119,8 +119,11 @@ export function PriorityBoard({
                   <MiniPanel label="Turbine" v={e.subsystems.turbine} />
                   <div className="flex flex-col justify-between">
                     <div>
-                      <div className="eyebrow">Trend (24 cyc)</div>
-                      <div className="mt-1 h-16">
+                      <div className="eyebrow text-xs font-bold text-sky-800">24-Cycle Health Sparkline Trend</div>
+                      <p className="text-[10px] text-slate-600 font-sans mt-0.5">
+                        <strong>What this shows:</strong> 24-operating-cycle health index trajectory & anomaly decay rate.
+                      </p>
+                      <div className="mt-1.5 h-16">
                         <ResponsiveContainer width="100%" height="100%">
                           <LineChart data={Array.from({ length: 24 }).map((_, i) => ({ i, v: e.health - Math.sin(i / 2) * 3 - (e.degraded ? i * 0.4 : 0) }))}>
                             <Line type="monotone" dataKey="v" stroke={severityColor(e.severity)} strokeWidth={2} dot={false} isAnimationActive={false} />
