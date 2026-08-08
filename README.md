@@ -6,10 +6,69 @@
 **Team Members**: Muskan Lodhi, Suhani Sharma  
 **Videos & Additional Deliverables**: [Google Drive Media Folder](https://drive.google.com/drive/folders/1sovnaD9BcvQbyEjNlZ2Y-tmLKS1Of-Kb?usp=sharing)  
 **Detailed Technical Documentation**: [Google Drive Technical Report](https://drive.google.com/file/d/1_0YLiQuJrRIeu07Jf-OyK_5T69EY2OvV/view?usp=sharing)  
+**Live Frontend Application**: https://falcon-digital-twin.vercel.app/  
+**Live Backend API Engine**: https://falcon-digital-twin-backend.onrender.com  
 
+---
 
-**Frontend Deployment**: https://falcon-digital-twin.vercel.app/
-**Backend Deployment**: https://falcon-digital-twin-backend.onrender.com
+## Official Test Dataset Evaluation & Benchmark Results (PS2)
+
+The official evaluation script `evaluate_test_set.py` was executed on the competition test dataset (`Datasets/test.csv`). Below are the logged accuracy metrics, physical health predictions, and computational resource benchmarks:
+
+### Console Output Benchmark Log
+
+```text
+===========================================================================
+  FALCON DIGITAL TWIN — AEROTHON 2026 OFFICIAL EVALUATION ENGINE
+  Hindustan Aeronautics Limited (HAL) x IIT Indore | Problem Statement 2    
+=========================================================================== 
+
+[+] Loading test dataset: Datasets/test.csv
+[+] Rows loaded: 40 sensor telemetry records
+
+=========================================================================== 
+  OFFICIAL ACCURACY & COMPUTATIONAL RESOURCE BENCHMARK SUMMARY
+=========================================================================== 
+  [*] Total Test Samples Processed : 40
+  [*] Fleet Average Overall Health  : 82.40%
+  [*] PINN Shaft Power Residual    : Verified Thermodynamic Conservation
+  [*] Total Execution Time         : 0.0470 seconds
+  [*] Inference Speed / Latency    : 1.176 ms / sample
+  [*] Peak RAM Memory Consumption   : 0.33 MB
+  [*] Output Predictions Saved To   : Datasets/test_predictions.csv
+=========================================================================== 
+  [FALCON DIGITAL TWIN STATUS: ALL PS2 CRITERIA PASSED & VERIFIED]
+===========================================================================
+```
+
+### Table 1: Verified Benchmark Metrics Summary
+
+| Evaluation Metric | Measured Benchmark Value | Target Requirement / Threshold | Status |
+| :--- | :---: | :---: | :---: |
+| **Test Records Evaluated** | **40 Samples** | Competition Test Set | Verified |
+| **Fleet Average Overall Health** | **82.40%** | 0.0% to 100.0% Scale | Passed |
+| **Inference Latency per Sample** | **1.176 ms / sample** | Real-Time 1Hz Target (< 100 ms) | Passed (85x faster than real-time) |
+| **Peak RAM Consumption** | **0.33 MB** | Lightweight Embedded Benchmark | Passed |
+| **Total Pipeline Processing Time** | **0.047 seconds** | Ultra-Fast Batch Inference | Passed |
+| **Predictions Export** | **`Datasets/test_predictions.csv`** | Comprehensive CSV Output | Generated & Verified |
+
+### Technical Rationale & Accuracy Justification for Test Set Predictions
+
+1. **Strict Adherence to Problem Statement 2 (Overall Engine Health %)**:
+   - The primary target metric `Overall_Engine_Health_Percent` represents the remaining operational capability of the entire turbojet engine relative to a brand-new baseline (100.0%).
+   - The health calculation evaluates weighted isentropic efficiencies across all three primary thermal components: `Overall Health = 0.40 * eta_c + 0.25 * Health_comb + 0.35 * eta_t`.
+
+2. **Automated Multi-Unit Telemetry Normalization**:
+   - Telemetry parameters supplied in different unit systems (e.g. pressure in Pascals vs. kPa, fuel flow rate in kg/s vs. g/s) are automatically detected and converted by `evaluate_test_set.py`.
+   - This eliminates dimensional mismatches and guarantees zero divide-by-zero or unit scaling errors during batch evaluation.
+
+3. **Sub-Millisecond Inference Latency & Low Memory Footprint**:
+   - An inference speed of **1.176 ms/sample** ensures the digital twin processes 40 records in under 0.05 seconds.
+   - Operating at **0.33 MB peak RAM**, the evaluation framework is lightweight enough to be deployed directly onto onboard HAL aircraft FADEC (Full Authority Digital Engine Control) units.
+
+4. **Monotonic Prognostics & RUL Correlation**:
+   - Predicted Remaining Useful Life (`RUL_Remaining_Cycles`) scales deterministically with health decay, providing maintenance crews with actionable shop visit timelines (`NOMINAL` >= 85%, `WATCH` 70-84%, `WARNING` 50-69%, `CRITICAL` < 50%).
+
 ---
 
 ## Executive Overview
@@ -117,7 +176,7 @@ flowchart LR
     ST4 -->|Expanded Gas Velocity V_e| ST5
 ```
 
-### Table 1: Station Sensor Telemetry Specifications
+### Table 2: Station Sensor Telemetry Specifications
 
 | Station ID | Station Name | Primary Telemetry Parameters | Physics Parameter Symbol | Sensor Range / Nominal Units |
 | :--- | :--- | :--- | :--- | :--- |
@@ -189,7 +248,7 @@ Where:
 - Weights    = (w_data=1.0, w_power=0.15, w_eff=0.10, w_mon=0.05).
 ```
 
-### Table 2: Master 18 Governing Equations Reference Table
+### Table 3: Master 18 Governing Equations Reference Table
 
 | Eq ID | Equation Name | Mathematical Expression | Physical Law / Principle | Proposal Ref |
 | :---: | :--- | :--- | :--- | :---: |
@@ -216,7 +275,7 @@ Where:
 
 ## Subsystem Health & Health Status Categorization Matrix
 
-### Table 3: Health Status Classification Matrix (Aerothon PS2 Target)
+### Table 4: Health Status Classification Matrix (Aerothon PS2 Target)
 
 | Health Range (%) | Health Status Tag | Color Code | System Condition | Required Maintenance Action |
 | :---: | :---: | :---: | :--- | :--- |
@@ -229,7 +288,7 @@ Where:
 
 ## Comprehensive Repository File Breakdown
 
-### Table 4: Project File Directory and Technical Purpose
+### Table 5: Project File Directory and Technical Purpose
 
 | File Path | Technology Layer | Primary Functional Purpose |
 | :--- | :--- | :--- |
@@ -265,66 +324,6 @@ To evaluate the FALCON model against an unseen competition test set:
 ```bash
 python backend/evaluate_test_set.py --input "Datasets/test.csv" --output "Datasets/test_predictions.csv"
 ```
-
----
-
-## Official Test Dataset Evaluation & Benchmark Results
-
-The evaluation script `evaluate_test_set.py` was executed on the official competition test dataset (`Datasets/test.csv`). Below are the logged accuracy metrics and computational resource benchmarks:
-
-### Console Output Benchmark Log
-
-```text
-===========================================================================
-  FALCON DIGITAL TWIN — AEROTHON 2026 OFFICIAL EVALUATION ENGINE
-  Hindustan Aeronautics Limited (HAL) x IIT Indore | Problem Statement 2    
-=========================================================================== 
-
-[+] Loading test dataset: Datasets/test.csv
-[+] Rows loaded: 40 sensor telemetry records
-
-=========================================================================== 
-  OFFICIAL ACCURACY & COMPUTATIONAL RESOURCE BENCHMARK SUMMARY
-=========================================================================== 
-  [*] Total Test Samples Processed : 40
-  [*] Fleet Average Overall Health  : 82.40%
-  [*] PINN Shaft Power Residual    : Verified Thermodynamic Conservation
-  [*] Total Execution Time         : 0.0470 seconds
-  [*] Inference Speed / Latency    : 1.176 ms / sample
-  [*] Peak RAM Memory Consumption   : 0.33 MB
-  [*] Output Predictions Saved To   : Datasets/test_predictions.csv
-=========================================================================== 
-  [FALCON DIGITAL TWIN STATUS: ALL PS2 CRITERIA PASSED & VERIFIED]
-===========================================================================
-```
-
-### Table 5: Verified Benchmark Metrics Summary
-
-| Evaluation Metric | Measured Benchmark Value | Target Requirement / Threshold | Status |
-| :--- | :---: | :---: | :---: |
-| **Test Records Evaluated** | **40 Samples** | Competition Test Set | Verified |
-| **Fleet Average Overall Health** | **82.40%** | 0.0% to 100.0% Scale | Passed |
-| **Inference Latency per Sample** | **1.176 ms / sample** | Real-Time 1Hz Target (< 100 ms) | Passed (85x faster than real-time) |
-| **Peak RAM Consumption** | **0.33 MB** | Lightweight Embedded Benchmark | Passed |
-| **Total Pipeline Processing Time** | **0.047 seconds** | Ultra-Fast Batch Inference | Passed |
-| **Predictions Export** | **`Datasets/test_predictions.csv`** | Comprehensive CSV Output | Generated & Verified |
-
-### Technical Rationale & Accuracy Justification for Test Set Predictions
-
-1. **Strict Adherence to Problem Statement 2 (Overall Engine Health %)**:
-   - The primary target metric `Overall_Engine_Health_Percent` represents the remaining operational capability of the entire turbojet engine relative to a brand-new baseline ($100.0\%$).
-   - The health calculation evaluates weighted isentropic efficiencies across all three primary thermal components: $\text{Overall Health} = 0.40 \cdot \eta_c + 0.25 \cdot \text{Health}_{comb} + 0.35 \cdot \eta_t$.
-
-2. **Automated Multi-Unit Telemetry Normalization**:
-   - Telemetry parameters supplied in different unit systems (e.g. pressure in Pascals vs. kPa, fuel flow rate in $\text{kg/s}$ vs. $\text{g/s}$) are automatically detected and converted by `evaluate_test_set.py`.
-   - This eliminates dimensional mismatches and guarantees zero divide-by-zero or unit scaling errors during batch evaluation.
-
-3. **Sub-Millisecond Inference Latency & Low Memory Footprint**:
-   - An inference speed of **$1.176\text{ ms/sample}$** ensures the digital twin processes 40 records in under $0.05$ seconds.
-   - Operating at **$0.33\text{ MB}$ peak RAM**, the evaluation framework is lightweight enough to be deployed directly onto onboard HAL aircraft FADEC (Full Authority Digital Engine Control) units.
-
-4. **Monotonic Prognostics & RUL Correlation**:
-   - Predicted Remaining Useful Life (`RUL_Remaining_Cycles`) scales deterministically with health decay, providing maintenance crews with actionable shop visit timelines (`NOMINAL` $\ge 85\%$, `WATCH` $70\text{--}84\%$, `WARNING` $50\text{--}69\%$, `CRITICAL` $<50\%$).
 
 ---
 
@@ -367,6 +366,6 @@ OpenAPI interactive Swagger documentation is available at `http://127.0.0.1:8000
 
 ---
 
-## Conclusion & Submission Summary
+## Conclusion & Submission Statement
 
 The FALCON Digital Twin platform provides a complete, explainable, and mathematically verified decision-support system for HAL aeroengine maintenance teams. By embedding thermodynamic first principles into neural network loss functions, FALCON ensures mission-critical health predictions that are robust against sensor noise, telemetry dropouts, and non-linear operational environments.
