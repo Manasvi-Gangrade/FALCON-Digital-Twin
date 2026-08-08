@@ -10,8 +10,12 @@ subsystem health indices, and overall engine performance capability (%) calculat
 
 import math
 import numpy as np
-import torch
-import torch.nn as nn
+try:
+    import torch
+    import torch.nn as nn
+except ImportError:
+    torch = None
+    nn = None
 from typing import Dict, Tuple, Union, Any
 
 # ==============================================================================

@@ -57,17 +57,26 @@ def run_evaluation(input_path: str, output_path: str):
     
     # 2. Vectorized / Batch Processing with PINN Physics Core
     for idx, row in df.iterrows():
-        rpm = get_val(row, ['rpm', 'n1', 'n2', 'speed'], default=12500.0)
-        p2 = get_val(row, ['p2', 'p24', 'p3'], default=65.0)
-        t2 = get_val(row, ['t2', 't24'], default=480.0)
-        p3 = get_val(row, ['p3', 'p30'], default=61.0)
-        t3 = get_val(row, ['t3', 't30'], default=1120.0)
-        p4 = get_val(row, ['p4', 'p40', 'p50'], default=25.0)
-        t4 = get_val(row, ['t4', 't50', 'egt'], default=850.0)
-        fuel = get_val(row, ['fuel', 'wf', 'fuel_flow'], default=850.0)
+        rpm = get_val(row, ['rpm', 'rpm_rev_min', 'n1', 'n2', 'speed'], default=12500.0)
+        p2_raw = get_val(row, ['p2', 'p2_pa', 'p24', 'p3'], default=65.0)
+        t2 = get_val(row, ['t2', 't2_k', 't24'], default=480.0)
+        p3_raw = get_val(row, ['p3', 'p3_pa', 'p30'], default=61.0)
+        t3 = get_val(row, ['t3', 't3_k', 't30'], default=1120.0)
+        p4_raw = get_val(row, ['p4', 'p4_pa', 'p40', 'p50'], default=25.0)
+        t4 = get_val(row, ['t4', 't4_k', 't50', 'egt'], default=850.0)
+        fuel_raw = get_val(row, ['fuelflow_kg_s', 'fuel', 'wf', 'fuel_flow'], default=850.0)
+        p_amb_raw = get_val(row, ['pamb_pa', 'p_amb', 'pamb'], default=35.6)
+        t_amb = get_val(row, ['tamb_k', 't_amb', 'tamb'], default=242.15)
+        
+        # Unit Conversions (Pascals to kPa, kg/s to g/s if required)
+        p2 = p2_raw / 1000.0 if p2_raw > 1000.0 else p2_raw
+        p3 = p3_raw / 1000.0 if p3_raw > 1000.0 else p3_raw
+        p4 = p4_raw / 1000.0 if p4_raw > 1000.0 else p4_raw
+        p_amb = p_amb_raw / 1000.0 if p_amb_raw > 1000.0 else p_amb_raw
+        fuel = fuel_raw * 1000.0 if fuel_raw < 50.0 else fuel_raw
         
         # Core Physics & Thermodynamic Health Engine Evaluation
-        eval_res = compute_engine_telemetry_physics(rpm, p2, t2, p3, t3, p4, t4, fuel)
+        eval_res = compute_engine_telemetry_physics(rpm, p2, t2, p3, t3, p4, t4, fuel, p_amb, t_amb)
         
         overall_health = eval_res['overall_health_percent']
         rul = eval_res['rul_cycles']
@@ -84,7 +93,7 @@ def run_evaluation(input_path: str, output_path: str):
 
         res_entry = {
             "Index": idx + 1,
-            "Engine_ID": row.get('Engine_ID', row.get('unit', f'TJ-04-#{idx+1}')),
+            "Engine_ID": row.get('Engine_ID', row.get('EngineID', row.get('unit', f'TJ-04-#{idx+1}'))),
             "Cycle": row.get('Cycle', row.get('time', idx + 1)),
             "Overall_Engine_Health_Percent": overall_health,
             "Health_Status": status,
